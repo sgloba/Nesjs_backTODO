@@ -26,9 +26,16 @@ export class ArticleService {
         return await (new this.articleModel(article).save())
     }
 
-    async getAll(): Promise<Article[]> {
+    async getAll({author, date, tags}): Promise<Article[]> {
+        console.log('params ', author, date, tags)
+        let query: any = {
+            ...author && { author },
+            ...date && { date },
+            ...tags && { tags },
+        }
+
         return await this.articleModel
-            .find()
+            .find({...query})
             .lean()
             .exec();
     }
@@ -40,19 +47,27 @@ export class ArticleService {
             .exec();
     }
 
-    async getByAuthor(author): Promise<Article[]> {
-        return await this.articleModel
-            .find(
-                {
-                    author
-                }
-            )
-            .lean()
-            .exec()
-    }
-
     async update(id: string, dto: UpdateArticleDto): Promise<Article> {
-        return await this.articleModel.findOneAndUpdate({_id: id}, dto,{new: true})
+        const user = dto.marks[0].user;
+        const articleObj = await this.articleModel.findById(id).lean().exec();
+        const userMark = articleObj.marks.find((mark) => mark.user === user);
+
+        const newMarks = !userMark
+            ? [...articleObj.marks, ...dto.marks]
+            : [
+                ...articleObj.marks
+                    .filter((item) => item.user !== user),
+                ...dto.marks
+              ]
+
+        return await this.articleModel
+            .findByIdAndUpdate(
+                id,
+                {
+                    marks: newMarks
+                },
+                { new: true }
+            )
             .exec()
     }
 }

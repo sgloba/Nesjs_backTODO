@@ -1,9 +1,8 @@
-import {Body, Controller, Get, HttpStatus, Param, Post, Put, Res} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Param, Post, Put, Query, Res} from '@nestjs/common';
 import {ArticleService} from "../services/article.service";
 import {CreateArticleDto} from "../dto/article-create.dto";
 import {Article, ArticleDocument} from "../schemas/article.schema";
 import {UpdateArticleDto} from "../dto/article-update.dto";
-import {ArticleI} from "../interfaces/article.interface";
 
 @Controller('api/articles')
 export class ArticleController {
@@ -12,8 +11,13 @@ export class ArticleController {
     ) { }
 
     @Get()
-    getAllArticles() {
-        return this.articleService.getAll()
+    getAllArticles(@Query() params) {
+        return this.articleService.getAll(params)
+    }
+
+    @Get(':id')
+    getById(@Param('id') id) {
+        return this.articleService.getById(id);
     }
 
     @Post()

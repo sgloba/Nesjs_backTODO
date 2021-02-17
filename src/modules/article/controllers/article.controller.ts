@@ -27,7 +27,7 @@ export class ArticleController {
 
     @Put(':id')
     update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<Article> {
-        console.log('id', id)
-        return this.articleService.update(id, dto);
+        console.log('put', id, dto)
+        return this.articleService.update(id, dto) as any;
     }
 }

@@ -3,6 +3,8 @@ import {Document} from "mongoose";
 import {TranslatablePropI} from "../interfaces/translatable-prop.interface";
 import {CommentsI} from "../interfaces/comments.interface";
 import {MarksI} from "../interfaces/marks.interface";
+import {Mark} from "./mark.schema";
+import * as mongoose from "mongoose";
 
 
 export type ArticleDocument = Article & Document;
@@ -17,6 +19,9 @@ export class Article {
         _id: false
     })
     title: TranslatablePropI[];
+
+    // @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Mark.name }] })
+    // title: ArticleTranslatable[]
 
     @Prop()
     author: string;
@@ -42,11 +47,9 @@ export class Article {
     @Prop()
     img: string;
 
-    @Prop(raw({
-        user: String,
-        rate: Number,
-    }))
-    marks: MarksI[];
+    @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Mark.name }] })
+    marks: Mark[];
+
 
     @Prop({
         type: [{

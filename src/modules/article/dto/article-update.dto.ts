@@ -17,5 +17,5 @@ export class UpdateArticleDto {
 
     @IsArray()
     @IsOptional()
-    readonly marks: MarksI[]
+    readonly marks: MarksI
 }

@@ -1,4 +1,5 @@
-
+# credentials
+firebase-adminsdk-credentials.json
 .env
 # compiled output
 /dist

@@ -1,8 +1,9 @@
-import {Body, Controller, Get, HttpStatus, Param, Post, Put, Query, Res} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Param, Post, Put, Query, Headers} from '@nestjs/common';
 import {ArticleService} from "../services/article.service";
 import {CreateArticleDto} from "../dto/article-create.dto";
 import {Article, ArticleDocument} from "../schemas/article.schema";
 import {UpdateArticleDto} from "../dto/article-update.dto";
+import {User} from "../decorators/userId.decorator";
 
 @Controller('api/articles')
 export class ArticleController {
@@ -21,8 +22,8 @@ export class ArticleController {
     }
 
     @Post()
-    create(@Body() dto: CreateArticleDto): Promise<ArticleDocument> {
-        return this.articleService.create(dto);
+    create(@Body() dto: CreateArticleDto, @User('user_id') userId): Promise<ArticleDocument> {
+        return this.articleService.create(dto, userId);
     }
 
     @Put(':id')

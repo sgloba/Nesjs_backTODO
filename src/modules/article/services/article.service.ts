@@ -5,6 +5,9 @@ import {Model} from "mongoose";
 import {CreateArticleDto} from "../dto/article-create.dto";
 import {UpdateArticleDto} from "../dto/article-update.dto";
 import {Mark, MarkDocument} from "../schemas/mark.schema";
+import * as admin from 'firebase-admin';
+import {pick} from '../utils/object.utils';
+
 
 @Injectable()
 export class ArticleService {
@@ -15,33 +18,46 @@ export class ArticleService {
         private markModel: Model<MarkDocument>
     ) { }
 
-    async create(dto: CreateArticleDto): Promise<ArticleDocument> {
+    async create(dto: CreateArticleDto, userId): Promise<any> {
         const article = {
             ...dto,
-            preview: [{lang: 'en', content: 'test preview'}],
+            author: userId,
             img: 'https://source.unsplash.com/random/220x220',
             comments: [],
-            tags: [],
         }
 
         return await (new this.articleModel(article).save())
     }
 
-    async getAll({author, date, tags}): Promise<Article[]> {
-        let query: any = {
+    async getAll({author, date, tags}): Promise<any> {
+
+        let query = {
             ...author && { author },
             ...date && { date },
             ...tags && { tags },
         }
 
-        return await this.articleModel
-            .find({...query})
+        const rawArticles = await this.articleModel
+            .find(query)
             .populate({
                 path: 'marks',
                 select: ['rate', 'user']
             })
             .lean()
             .exec();
+
+        const articlesPromises = rawArticles
+            .map(async (article) => {
+                const user = await admin
+                    .auth()
+                    .getUser(article.author);
+                return {
+                    ...article,
+                    author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
+                }
+            });
+
+        return await Promise.all(articlesPromises);
     }
 
     async getById(id: string): Promise<Article> {
@@ -81,27 +97,4 @@ export class ArticleService {
         }
     }
 
-    // async update(id: string, dto: UpdateArticleDto): Promise<Article> {
-    //     const user = dto.marks[0].user;
-    //     const articleObj = await this.articleModel.findById(id).lean().exec();
-    //     const userMark = articleObj.marks.find((mark) => mark.user === user);
-    //
-    //     const newMarks = !userMark
-    //         ? [...articleObj.marks, ...dto.marks]
-    //         : [
-    //             ...articleObj.marks
-    //                 .filter((item) => item.user !== user),
-    //             ...dto.marks
-    //           ]
-    //
-    //     return await this.articleModel
-    //         .findByIdAndUpdate(
-    //             id,
-    //             {
-    //                 marks: newMarks
-    //             },
-    //             { new: true }
-    //         )
-    //         .exec()
-    // }
 }

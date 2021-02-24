@@ -77,7 +77,10 @@ export class ArticleService {
         const mark: any = await article.marks.find((item) => item.user === user);
 
         if (mark) {
-            await this.markModel.findByIdAndUpdate(mark._id, { rate: dto.marks[0].rate });
+            await this.markModel
+                .findByIdAndUpdate(
+                    mark._id,
+                    { rate: mark.rate === dto.marks[0].rate ?  null : dto.marks[0].rate});
             return await this.getById(id);
         } else {
             const mark = await this.markModel.create({ rate: dto.marks[0].rate, user });

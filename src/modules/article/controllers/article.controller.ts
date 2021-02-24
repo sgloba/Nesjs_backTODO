@@ -1,9 +1,9 @@
-import {Body, Controller, Get, HttpStatus, Param, Post, Put, Query, Headers} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, Put, Query} from '@nestjs/common';
 import {ArticleService} from "../services/article.service";
 import {CreateArticleDto} from "../dto/article-create.dto";
 import {Article, ArticleDocument} from "../schemas/article.schema";
 import {UpdateArticleDto} from "../dto/article-update.dto";
-import {User} from "../decorators/userId.decorator";
+import {User} from "../decorators/user.decorator";
 
 @Controller('api/articles')
 export class ArticleController {
@@ -28,7 +28,6 @@ export class ArticleController {
 
     @Put(':id')
     update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<Article> {
-        console.log('put', id, dto)
         return this.articleService.update(id, dto) as any;
     }
 }

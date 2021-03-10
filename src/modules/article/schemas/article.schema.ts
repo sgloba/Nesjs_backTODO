@@ -1,8 +1,6 @@
-import {Prop, raw, Schema, SchemaFactory} from "@nestjs/mongoose";
+import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import {Document} from "mongoose";
 import {TranslatablePropI} from "../interfaces/translatable-prop.interface";
-import {CommentsI} from "../interfaces/comments.interface";
-import {MarksI} from "../interfaces/marks.interface";
 import {Mark} from "./mark.schema";
 import * as mongoose from "mongoose";
 
@@ -20,11 +18,17 @@ export class Article {
     })
     title: TranslatablePropI[];
 
-    // @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Mark.name }] })
-    // title: ArticleTranslatable[]
-
-    @Prop()
-    author: string;
+    @Prop(
+        {
+            type: {
+                displayName: {type: String},
+                email: {type: String},
+                photoURL: {type: String},
+                uid: {type: String},
+            },
+        }
+    )
+    author: any;
 
     @Prop(  {
         type: [{
@@ -59,7 +63,6 @@ export class Article {
         }],
         _id: false
     })
-    comments: CommentsI[];
 
     @Prop()
     tags: string[];

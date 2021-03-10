@@ -13,7 +13,9 @@ async function bootstrap() {
 bootstrap();
 
 const serviceAccount = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const bucketName = process.env.FIREBASE_STORAGE_BUCKET_NAME
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: bucketName
 });

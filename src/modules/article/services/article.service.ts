@@ -7,6 +7,7 @@ import {UpdateArticleDto} from "../dto/article-update.dto";
 import {Mark, MarkDocument} from "../schemas/mark.schema";
 import * as admin from 'firebase-admin';
 import {pick} from '../utils/object.utils';
+import * as uuid from 'uuid-v4';
 
 
 @Injectable()
@@ -22,7 +23,6 @@ export class ArticleService {
         const article = {
             ...dto,
             author: userId,
-            img: 'https://source.unsplash.com/random/220x220',
             comments: [],
         }
 
@@ -48,9 +48,11 @@ export class ArticleService {
 
         const articlesPromises = rawArticles
             .map(async (article) => {
+
                 const user = await admin
                     .auth()
-                    .getUser(article.author);
+                    .getUser(article.author.uid);
+
                 return {
                     ...article,
                     author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
@@ -61,7 +63,7 @@ export class ArticleService {
     }
 
     async getById(id: string): Promise<Article> {
-        return await this.articleModel
+        const article = await this.articleModel
             .findById(id)
             .populate({
                 path: 'marks',
@@ -69,6 +71,22 @@ export class ArticleService {
             })
             .lean()
             .exec();
+
+        const userIds = article.marks.map((mark) => ({uid: mark.user}));
+        const authorId = article.author.uid;
+
+        const users = await admin
+            .auth()
+            .getUsers(userIds)
+
+        const user = await admin
+            .auth()
+            .getUser(authorId)
+
+        return {
+            ...article,
+            author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
+        }
     }
 
     async update(id: string, dto: UpdateArticleDto) {
@@ -85,10 +103,10 @@ export class ArticleService {
         } else {
             const mark = await this.markModel.create({ rate: dto.marks[0].rate, user });
 
-            return await this.articleModel.findByIdAndUpdate(id, {
+            await this.articleModel.findByIdAndUpdate(id, {
                 $push: {
-                    marks: mark._id
-                }
+                    marks: mark._id,
+                },
             }, { new: true })
                 .populate({
                     path: 'marks',
@@ -97,7 +115,25 @@ export class ArticleService {
                 })
                 .lean()
                 .exec();
+            return await this.getById(id);
         }
+    }
+
+    async uploadFileToFirebase(fileImg) {
+        const bucket = admin.storage().bucket()
+        const rndId = uuid();
+        const metadata = {
+            metadata: {
+                firebaseStorageDownloadTokens: uuid()
+            },
+            contentType: 'image',
+        };
+
+        await bucket.file(rndId).save(fileImg.buffer, {
+            metadata
+        });
+
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${rndId}?alt=media&token=${metadata.metadata.firebaseStorageDownloadTokens}`;
     }
 
 }

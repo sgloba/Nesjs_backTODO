@@ -1,5 +1,5 @@
 import {IsNotEmpty, IsArray, IsOptional} from 'class-validator';
-import {Mark} from "../schemas/mark.schema";
+import {Mark} from "../../marks/schemas/mark.schema";
 import {MarksI} from "../interfaces/marks.interface";
 import {Transform} from "class-transformer";
 

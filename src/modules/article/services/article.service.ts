@@ -3,11 +3,9 @@ import {InjectModel} from "@nestjs/mongoose";
 import {Article, ArticleDocument} from "../schemas/article.schema";
 import {Model} from "mongoose";
 import {CreateArticleDto} from "../dto/article-create.dto";
-import {UpdateArticleDto} from "../dto/article-update.dto";
-import {Mark, MarkDocument} from "../schemas/mark.schema";
 import * as admin from 'firebase-admin';
-import {pick} from '../utils/object.utils';
 import * as uuid from 'uuid-v4';
+import {CommonService} from "../../../services/common.service";
 
 
 @Injectable()
@@ -15,8 +13,7 @@ export class ArticleService {
     constructor(
         @InjectModel(Article.name)
         private articleModel: Model<ArticleDocument>,
-        @InjectModel(Mark.name)
-        private markModel: Model<MarkDocument>
+        private commonService: CommonService,
     ) { }
 
     async create(dto: CreateArticleDto, userId): Promise<any> {
@@ -39,27 +36,28 @@ export class ArticleService {
 
         const rawArticles = await this.articleModel
             .find(query)
-            .populate({
-                path: 'marks',
-                select: ['rate', 'user']
-            })
             .lean()
-            .exec();
+            .exec()
 
         const articlesPromises = rawArticles
             .map(async (article) => {
 
-                const user = await admin
-                    .auth()
-                    .getUser(article.author.uid);
+                const articleWithPopulatedAuthor = await this.commonService.populateUser(article)
 
-                return {
-                    ...article,
-                    author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
-                }
+                return await this.commonService.populateMarks(articleWithPopulatedAuthor)
             });
 
         return await Promise.all(articlesPromises);
+    }
+
+    async getArticleById(id: string): Promise<Article> {
+        const article = await this.articleModel
+            .findById(id)
+            .lean()
+            .exec();
+
+        const articleWithPopulatedAuthor = await this.commonService.populateUser(article)
+        return await this.commonService.populateMarks(articleWithPopulatedAuthor)
     }
 
     async uploadFileToFirebase(fileImg) {

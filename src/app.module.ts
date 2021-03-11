@@ -8,7 +8,9 @@ import { CommentModule } from './modules/comment/comment.module';
 import { CommonService } from './services/common.service';
 import {Comment, CommentSchema} from "./modules/comment/schemas/comment.schema";
 import {Article, ArticleSchema} from "./modules/article/schemas/article.schema";
-import {Mark, MarkSchema} from "./modules/article/schemas/mark.schema";
+import {Mark, MarkSchema} from "./modules/marks/schemas/mark.schema";
+import { MarksModule } from './modules/marks/marks.module';
+import {MarksService} from "./modules/marks/services/marks.service";
 
 @Module({
   imports: [
@@ -21,9 +23,10 @@ import {Mark, MarkSchema} from "./modules/article/schemas/mark.schema";
               {name: Comment.name, schema: CommentSchema},
               {name: Article.name, schema: ArticleSchema},
               {name: Mark.name, schema: MarkSchema},
-          ])
+          ]),
+      MarksModule
   ],
   controllers: [AppController],
-  providers: [AppService, CommonService],
+  providers: [AppService, CommonService, MarksService],
 })
 export class AppModule {}

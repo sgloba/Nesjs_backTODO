@@ -5,12 +5,13 @@ import {CreateCommentDto} from "../dto/comment-create.dto";
 import {Article} from "../../article/schemas/article.schema";
 import {UpdateCommentDto} from "../dto/comment-update.dto";
 import {CommonService} from "../../../services/common.service";
+import {MarksService} from "../../marks/services/marks.service";
 
 @Controller('api/comments')
 export class CommentController {
     constructor(
-        private commonService: CommonService,
-        private commentService: CommentService
+        private commentService: CommentService,
+        private marksService: MarksService
     ) {
     }
 
@@ -30,7 +31,7 @@ export class CommentController {
     }
 
     @Put(':id')
-    update(@Param('id') id, @Body() dto: UpdateCommentDto): Promise<Article> {
-        return this.commonService.update(id, dto, 'comment') as any;
+    update(@Param('id') id, @Body() dto: UpdateCommentDto): Promise<boolean> {
+        return this.marksService.setMark(id, dto);
     }
 }

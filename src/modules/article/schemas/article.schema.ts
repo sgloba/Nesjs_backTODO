@@ -1,7 +1,7 @@
 import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import {Document} from "mongoose";
 import {TranslatablePropI} from "../interfaces/translatable-prop.interface";
-import {Mark} from "./mark.schema";
+import {Mark} from "../../marks/schemas/mark.schema";
 import * as mongoose from "mongoose";
 
 
@@ -50,10 +50,6 @@ export class Article {
 
     @Prop()
     img: string;
-
-    @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: Mark.name }] })
-    marks: Mark[];
-
 
     @Prop({
         type: [{

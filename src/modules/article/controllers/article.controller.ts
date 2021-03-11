@@ -11,12 +11,11 @@ import {
 } from '@nestjs/common';
 import {ArticleService} from "../services/article.service";
 import {CreateArticleDto} from "../dto/article-create.dto";
-import {Article} from "../schemas/article.schema";
 import {UpdateArticleDto} from "../dto/article-update.dto";
 import {User} from "../decorators/user.decorator";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ParseJSONPipe} from "../pipes/parseJSONPipe";
-import {CommonService} from "../../../services/common.service";
+import {MarksService} from "../../marks/services/marks.service";
 
 
 
@@ -25,7 +24,7 @@ import {CommonService} from "../../../services/common.service";
 export class ArticleController {
     constructor(
         private articleService: ArticleService,
-        private commonService: CommonService
+        private marksService: MarksService
     ) { }
 
     @Get()
@@ -35,7 +34,7 @@ export class ArticleController {
 
     @Get(':id')
     getById(@Param('id') id) {
-        return this.commonService.getById(id, 'article');
+        return this.articleService.getArticleById(id);
     }
 
     @Post()
@@ -47,16 +46,14 @@ export class ArticleController {
         })) dto: CreateArticleDto,
         @User('user_id') userId
     ) {
-
         const author = { uid: userId}
         const body = {...dto, img: await this.articleService.uploadFileToFirebase(fileImg)}
 
         return await this.articleService.create(body, author);
-
     }
 
     @Put(':id')
-    update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<Article> {
-        return this.commonService.update(id, dto, 'article') as any;
+    update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<boolean> {
+        return this.marksService.setMark(id, dto);
     }
 }

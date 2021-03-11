@@ -13,6 +13,12 @@ export class Mark {
     @Prop()
     rate: number;
 
+    @Prop()
+    type: string;
+
+    @Prop()
+    target_id: string;
+
 }
 
 export const MarkSchema = SchemaFactory.createForClass(Mark);

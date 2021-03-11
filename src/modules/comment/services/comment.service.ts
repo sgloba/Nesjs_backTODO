@@ -6,12 +6,17 @@ import {Comment, CommentDocument} from "../schemas/comment.schema";
 import {CreateCommentDto} from "../dto/comment-create.dto";
 import * as admin from "firebase-admin";
 import {pick} from "../../article/utils/object.utils";
+import {Article, ArticleDocument} from "../../article/schemas/article.schema";
 
 @Injectable()
 export class CommentService {
     constructor(
         @InjectModel(Comment.name)
         private commentModel: Model<CommentDocument>,
+
+        @InjectModel(Article.name)
+        private articleModel: Model<ArticleDocument>,
+
         @InjectModel(Mark.name)
         private markModel: Model<MarkDocument>
     ) {
@@ -53,4 +58,6 @@ export class CommentService {
 
         return await (new this.commentModel(comment).save())
     }
+
+
 }

@@ -16,6 +16,7 @@ import {UpdateArticleDto} from "../dto/article-update.dto";
 import {User} from "../decorators/user.decorator";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ParseJSONPipe} from "../pipes/parseJSONPipe";
+import {CommonService} from "../../../services/common.service";
 
 
 
@@ -23,7 +24,8 @@ import {ParseJSONPipe} from "../pipes/parseJSONPipe";
 @Controller('api/articles')
 export class ArticleController {
     constructor(
-        private articleService: ArticleService
+        private articleService: ArticleService,
+        private commonService: CommonService
     ) { }
 
     @Get()
@@ -33,7 +35,7 @@ export class ArticleController {
 
     @Get(':id')
     getById(@Param('id') id) {
-        return this.articleService.getById(id);
+        return this.commonService.getById(id, 'article');
     }
 
     @Post()
@@ -55,6 +57,6 @@ export class ArticleController {
 
     @Put(':id')
     update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<Article> {
-        return this.articleService.update(id, dto) as any;
+        return this.commonService.update(id, dto, 'article') as any;
     }
 }

@@ -2,7 +2,7 @@ import {IsArray, IsOptional} from 'class-validator';
 import {MarksI} from "../../article/interfaces/marks.interface";
 
 
-export class UpdateArticleDto {
+export class UpdateCommentDto {
     @IsArray()
     @IsOptional()
     readonly title: [];

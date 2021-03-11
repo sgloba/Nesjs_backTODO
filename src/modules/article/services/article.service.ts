@@ -62,63 +62,6 @@ export class ArticleService {
         return await Promise.all(articlesPromises);
     }
 
-    async getById(id: string): Promise<Article> {
-        const article = await this.articleModel
-            .findById(id)
-            .populate({
-                path: 'marks',
-                select: ['rate', 'user']
-            })
-            .lean()
-            .exec();
-
-        const userIds = article.marks.map((mark) => ({uid: mark.user}));
-        const authorId = article.author.uid;
-
-        const users = await admin
-            .auth()
-            .getUsers(userIds)
-
-        const user = await admin
-            .auth()
-            .getUser(authorId)
-
-        return {
-            ...article,
-            author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
-        }
-    }
-
-    async update(id: string, dto: UpdateArticleDto) {
-        const user = dto.marks[0].user
-        const article = await this.getById(id);
-        const mark: any = await article.marks.find((item) => item.user === user);
-
-        if (mark) {
-            await this.markModel
-                .findByIdAndUpdate(
-                    mark._id,
-                    { rate: mark.rate === dto.marks[0].rate ?  null : dto.marks[0].rate});
-            return await this.getById(id);
-        } else {
-            const mark = await this.markModel.create({ rate: dto.marks[0].rate, user });
-
-            await this.articleModel.findByIdAndUpdate(id, {
-                $push: {
-                    marks: mark._id,
-                },
-            }, { new: true })
-                .populate({
-                    path: 'marks',
-                    model: Mark.name,
-                    select: ['rate', 'user']
-                })
-                .lean()
-                .exec();
-            return await this.getById(id);
-        }
-    }
-
     async uploadFileToFirebase(fileImg) {
         const bucket = admin.storage().bucket()
         const rndId = uuid();

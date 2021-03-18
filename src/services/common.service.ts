@@ -14,18 +14,24 @@ export class CommonService {
         const user = await admin
             .auth()
             .getUser(item.author.uid)
-        return {
+        return  await {
             ...item,
             author: pick(user, ['uid', 'email', 'displayName', 'photoURL'])
         }
     }
 
-    async populateMarks(item) {
+    async populateMarks(item, userId) {
         const marks = await this.markService.getMarks({target_id: item._id})
+        const isLikedByUser = await this.markService.getMarks({target_id: item._id, user: userId, rate: 1})
+        const isDislikedByUser = await this.markService.getMarks({target_id: item._id, user: userId, rate: -1})
 
         return {
             ...item,
-            marks
+            marks,
+            userState: {
+                isLikedByUser: isLikedByUser.length !== 0,
+                isDislikedByUser: isDislikedByUser.length !== 0
+            }
         }
     }
 

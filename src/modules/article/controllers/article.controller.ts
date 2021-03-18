@@ -18,18 +18,20 @@ import {ParseJSONPipe} from "../pipes/parseJSONPipe";
 import {MarksService} from "../../marks/services/marks.service";
 
 
-
-
 @Controller('api/articles')
 export class ArticleController {
     constructor(
         private articleService: ArticleService,
         private marksService: MarksService
-    ) { }
+    ) {
+    }
 
     @Get()
-    getAllArticles(@Query() params) {
-        return this.articleService.getAll(params)
+    getAllArticles(
+        @Query() params,
+        @User('user_id') userId
+    ) {
+        return this.articleService.getAll(params, userId)
     }
 
     @Get(':id')
@@ -44,16 +46,16 @@ export class ArticleController {
         @Body(new ParseJSONPipe({
             omit: ['fileImg']
         })) dto: CreateArticleDto,
-        @User('user_id') userId
+        @User('user_id') userId: string
     ) {
-        const author = { uid: userId}
+        const author = {uid: userId}
         const body = {...dto, img: await this.articleService.uploadFileToFirebase(fileImg)}
 
         return await this.articleService.create(body, author);
     }
 
     @Put(':id')
-    update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<boolean> {
+    update(@Param('id') id, @Body() dto: UpdateArticleDto): Promise<void> {
         return this.marksService.setMark(id, dto);
     }
 }

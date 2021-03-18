@@ -11,13 +11,19 @@ import {MarksService} from "../../marks/services/marks.service";
 export class CommentController {
     constructor(
         private commentService: CommentService,
-        private marksService: MarksService
+        private marksService: MarksService,
+        private commonService: CommonService
     ) {
     }
 
     @Get()
-    getByArticle(@Query() {article_id}) {
-        return this.commentService.getByArticle(article_id)
+    getByArticle(
+        @Query() {article_id},
+        @Query() {page},
+        @Query() {parent_comment_id},
+        @User('user_id') userId
+    ) {
+        return this.commentService.getByArticle(article_id, userId, page, parent_comment_id)
     }
 
     @Post()
@@ -27,11 +33,14 @@ export class CommentController {
     ) {
         const author = { uid: userId}
         const body = {...dto}
-        return await this.commentService.create(body, author);
+
+        return await this.commentService.create(body, author)
+            .then((item) => this.commonService.populateUser(item))
+            .then((item) => this.commonService.populateMarks(item, userId))
     }
 
     @Put(':id')
-    update(@Param('id') id, @Body() dto: UpdateCommentDto): Promise<boolean> {
+    update(@Param('id') id, @Body() dto: UpdateCommentDto): Promise<void> {
         return this.marksService.setMark(id, dto);
     }
 }

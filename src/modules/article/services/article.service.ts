@@ -19,16 +19,14 @@ export class ArticleService {
     async create(dto: CreateArticleDto, userId): Promise<any> {
         const article = {
             ...dto,
-            author: userId,
-            comments: [],
+            author: userId
         }
 
         return await (new this.articleModel(article).save())
     }
 
-    async getAll({author, date, tags}): Promise<any> {
-
-        let query = {
+    async getAll({author, date, tags}, userId): Promise<any> {
+        const query = {
             ...author && { author },
             ...date && { date },
             ...tags && { tags },
@@ -41,13 +39,11 @@ export class ArticleService {
 
         const articlesPromises = rawArticles
             .map(async (article) => {
-
                 const articleWithPopulatedAuthor = await this.commonService.populateUser(article)
-
-                return await this.commonService.populateMarks(articleWithPopulatedAuthor)
+                return await this.commonService.populateMarks(articleWithPopulatedAuthor, userId)
             });
 
-        return await Promise.all(articlesPromises);
+         return await Promise.all(articlesPromises);
     }
 
     async getArticleById(id: string): Promise<Article> {
@@ -57,7 +53,7 @@ export class ArticleService {
             .exec();
 
         const articleWithPopulatedAuthor = await this.commonService.populateUser(article)
-        return await this.commonService.populateMarks(articleWithPopulatedAuthor)
+        return await this.commonService.populateMarks(articleWithPopulatedAuthor, '')
     }
 
     async uploadFileToFirebase(fileImg) {

@@ -17,20 +17,26 @@ export class CommentService {
     ) {
     }
 
-    async getByArticle(articleId): Promise<any> {
+    async getByArticle(articleId: string, userId: string, page: number = 0, parent_comment_id: string = ''): Promise<any> {
+        const perPage = 2;
         const rawComments = await this.commentModel
-            .find({article_id: articleId})
+            .find({article_id: articleId, parent_comment_id})
+            .limit(perPage)
+            .skip(perPage*page)
             .lean()
             .exec();
+
+        const count = await this.commentModel
+            .find({article_id: articleId, parent_comment_id})
+            .count()
 
         const commentsPromises = rawComments
             .map(async (comment) => {
                 const commentWithPopulatedAuthor = await this.commonService.populateUser(comment)
+                return await this.commonService.populateMarks(commentWithPopulatedAuthor, userId)
+            })
 
-                return await this.commonService.populateMarks(commentWithPopulatedAuthor)
-            });
-
-        return await Promise.all(commentsPromises);
+        return {comments: await Promise.all(commentsPromises), hasNextPage: !(count - (perPage * page) <= perPage)};
     }
     async getCommentById(id: string): Promise<Comment> {
 
@@ -41,7 +47,7 @@ export class CommentService {
 
         const commentWithPopulatedAuthor = await this.commonService.populateUser(comment)
 
-        return await this.commonService.populateMarks(commentWithPopulatedAuthor)
+        return await this.commonService.populateMarks(commentWithPopulatedAuthor, '')
 
     }
 
@@ -51,7 +57,7 @@ export class CommentService {
             author: userId,
         }
 
-        return await (new this.commentModel(comment).save())
+        return (await (new this.commentModel(comment).save()) as any).toObject();
     }
 
 

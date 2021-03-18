@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {UpdateArticleDto} from "../../article/dto/article-update.dto";
 import {Model} from "mongoose";
 import {Mark, MarkDocument} from "../schemas/mark.schema";
@@ -17,16 +17,13 @@ export class MarksService {
         const mark: MarkDocument = await this.markModel.findOne({target_id, user})
 
         if (mark) {
-            await this.markModel
-                .findByIdAndUpdate(
-                    mark._id,
-                    { rate: mark.rate === dto.marks[0].rate ?  null : dto.marks[0].rate});
-
-            return true
-        } else {
-            await this.markModel.create({ rate: dto.marks[0].rate, target_id, user });
-            return true
+            mark.rate === dto.marks[0].rate
+                ? await this.markModel.remove({ _id: mark._id })
+                : await this.markModel.updateOne({ _id: mark._id }, { rate: dto.marks[0].rate })
+            return;
         }
+        await this.markModel.create({rate: dto.marks[0].rate, target_id, user});
+        return;
     }
 
     getMarks(options) {

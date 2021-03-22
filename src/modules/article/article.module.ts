@@ -7,9 +7,11 @@ import {Mark, MarkSchema} from "../marks/schemas/mark.schema";
 import {CommonService} from "../../services/common.service";
 import {Comment, CommentSchema} from "../comment/schemas/comment.schema";
 import {MarksService} from "../marks/services/marks.service";
+import {CommentModule} from "../comment/comment.module";
 
 @Module({
   imports: [
+      CommentModule,
       MongooseModule.forFeature(
           [
               {name: Article.name, schema: ArticleSchema},

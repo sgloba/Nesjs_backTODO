@@ -19,6 +19,6 @@ import {MarksService} from "../marks/services/marks.service";
   ],
   providers: [CommentService, CommonService, MarksService],
   controllers: [CommentController],
-
+  exports: [CommentService]
 })
 export class CommentModule {}

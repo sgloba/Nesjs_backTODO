@@ -21,8 +21,12 @@ export class CommentController {
         @Query() {article_id},
         @Query() {page},
         @Query() {parent_comment_id},
+        @Query() {commentId},
         @User('user_id') userId
     ) {
+        if(commentId) {
+            return this.commentService.getCommentById(commentId, userId)
+        }
         return this.commentService.getByArticle(article_id, userId, page, parent_comment_id)
     }
 
@@ -37,6 +41,7 @@ export class CommentController {
         return await this.commentService.create(body, author)
             .then((item) => this.commonService.populateUser(item))
             .then((item) => this.commonService.populateMarks(item, userId))
+            .then((item)=>this.commentService.populateReplies(item))
     }
 
     @Put(':id')

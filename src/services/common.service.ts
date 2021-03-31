@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as admin from "firebase-admin";
 import {pick} from "../modules/article/utils/object.utils";
 import {MarksService} from "../modules/marks/services/marks.service";
-import {Model} from "mongoose";
-import {CommentDocument} from "../modules/comment/schemas/comment.schema";
 
 @Injectable()
 export class CommonService {

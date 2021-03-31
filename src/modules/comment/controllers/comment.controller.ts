@@ -2,7 +2,6 @@ import {Body, Controller, Get, Param, Post, Put, Query} from '@nestjs/common';
 import {CommentService} from "../services/comment.service";
 import {User} from "../../article/decorators/user.decorator";
 import {CreateCommentDto} from "../dto/comment-create.dto";
-import {Article} from "../../article/schemas/article.schema";
 import {UpdateCommentDto} from "../dto/comment-update.dto";
 import {CommonService} from "../../../services/common.service";
 import {MarksService} from "../../marks/services/marks.service";
@@ -19,7 +18,8 @@ export class CommentController {
     @Get()
     getByArticle(
         @Query() {article_id},
-        @Query() {page},
+        @Query() {commentPage},
+        @Query() {articlePage},
         @Query() {parent_comment_id},
         @Query() {commentId},
         @User('user_id') userId
@@ -27,7 +27,7 @@ export class CommentController {
         if(commentId) {
             return this.commentService.getCommentById(commentId, userId)
         }
-        return this.commentService.getByArticle(article_id, userId, page, parent_comment_id)
+        return this.commentService.getByArticle(article_id, userId, commentPage, articlePage, parent_comment_id)
     }
 
     @Post()

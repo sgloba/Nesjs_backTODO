@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import {Model} from "mongoose";
 import {Mark, MarkDocument} from "../../marks/schemas/mark.schema";
@@ -17,37 +17,62 @@ export class CommentService {
     ) {
     }
 
-    async getByArticle(articleId: string, userId: string, page: number = 0, parent_comment_id: string = ''): Promise<any> {
+    async getByArticle(
+        articleId: string,
+        userId: string,
+        commentPage: number = 0,
+        articlePage: number = 0,
+        parent_comment_id: string = ''
+    ): Promise<any> {
         const perPage = 2;
+
         const rawComments = await this.commentModel
             .find({article_id: articleId, parent_comment_id})
             .limit(perPage)
-            .skip(perPage*page)
+            .skip(parent_comment_id === '' ? perPage*articlePage : perPage*commentPage)
             .lean()
             .exec();
 
-        const count = await this.commentModel
-            .find({article_id: articleId, parent_comment_id})
-            .count()
+        const countArticle = await this.commentModel
+            .find({article_id: articleId, parent_comment_id: '' })
+            .count();
 
         const commentsPromises = rawComments
             .map(async (comment) => {
-                const commentWithPopulatedAuthor = await this.commonService.populateUser(comment)
-                const commentWithPopulatedMarks = await this.commonService.populateMarks(commentWithPopulatedAuthor, userId)
-                return await this.populateReplies(commentWithPopulatedMarks)
-            })
+                return await this.commonService.populateUser(comment)
+                    .then((comment) => this.commonService.populateMarks(comment, userId))
+                    .then(async (comment) => {
+                       const countComment = await this.commentModel
+                            .find({parent_comment_id: comment._id})
+                            .count()
 
-        return {comments: await Promise.all(commentsPromises), hasNextPage: !(count - (perPage * page) <= perPage)};
+                        return  {...comment, hasNextPage: !(countComment - (perPage * commentPage) <= perPage)}
+                    })
+                    .then((comment) => this.populateReplies(comment))
+                    .then((comment) => ({...comment, currentPage: +commentPage}))
+            });
+
+        return { comments: await Promise.all(commentsPromises), hasNextPage: !(countArticle - (perPage * articlePage) <= perPage) }
     }
-    async getCommentById(id: string, userId: string): Promise<any> {
+    async getCommentById(id: string, userId: string, page: number = 0): Promise<any> {
+        const perPage = 2;
+        const count = await this.commentModel
+            .find({parent_comment_id: id})
+            .count();
+
         const comment = await this.commentModel
             .findById(id)
+            .limit(perPage)
+            .skip(perPage*page)
             .lean()
             .exec()
             .then((comment) => this.commonService.populateUser(comment))
-            .then((comment) => this.commonService.populateMarks(comment, userId));
+            .then((comment) => this.commonService.populateMarks(comment, userId))
+            .then((comment) => ({...comment, hasNextPage: !(count - (perPage * page) <= perPage)}))
+            .then((comment) => this.populateReplies(comment))
+            .then((comment) => ({...comment, currentPage: +page,}));
 
-        return {comments: [await this.populateReplies(comment)], hasNextPage: false}
+        return {comments: [comment]}
     }
 
     async create(dto: CreateCommentDto, userId): Promise<any> {
@@ -67,4 +92,7 @@ export class CommentService {
             replies
         }
     }
+
+
+
 }
